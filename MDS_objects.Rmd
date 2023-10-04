@@ -1,0 +1,109 @@
+---
+title: "MDS - Semantic Differential"
+author: "Victoria Bolotova"
+date: "14 03 2023"
+output: 
+    html_document:
+      theme: cosmo
+      code_folding: show
+      toc: true
+      toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+About the steps of the project: evaluate 14 objects on 9 scales
+
+- Objects:
+  - love
+  - child
+  - real self
+  - mind
+  - mom
+  - reason
+  - deceit
+  - beloved
+  - self-control
+  - hatred
+  - dad
+  - shyness
+  - sex
+  - ideal self
+
+- Scales:
+  - pleasant - unpleasant
+  - small-big
+  - active-passive
+  - dirty-clean
+  - strong-weak
+  - slow-fast	
+  - good-bad
+  - shallow-deep
+  - hot-cold
+  
+Then sum up corresponding scales to create only 3 main scales: evaluation, strength, activity.
+
+After this preparation step, we schould run MDS and intepret its results.
+
+
+```{r}
+library(foreign)
+library(dplyr)
+sd <- read.csv("mds.csv", row.names = 1)
+```
+
+
+```{r}
+sd_dist <- dist(sd, method = "euclidean")
+sd_dist
+```
+
+
+```{r}
+library(smacof)
+mds_dist <- mds(sd_dist)
+summary(mds_dist)
+```
+
+```{r}
+mds_dist
+```
+
+```{r}
+plot(mds_dist)
+```
+
+```{r}
+library(ggplot2)
+library(ggrepel) 
+
+conf_items <- as.data.frame(mds_dist$conf)
+
+p <- ggplot(conf_items, aes(x = D1, y = D2)) 
+p + geom_point(size = 1, colour = "red", alpha = 0.5) + 
+  coord_fixed(xlim = c(-1.5, 1.5), ylim = c(-1.5, 1.5)) + 
+  xlab("") +
+  ylab("") +
+  geom_point(aes(x = D1, y = D2), conf_items, colour = "cadetblue") + 
+  geom_text_repel(aes(x = D1, y = D2, label = rownames(conf_items)), 
+            conf_items, colour = "cadetblue", vjust = -0.8) + 
+  ggtitle("Unfolding Configuration Objects") +
+  theme_bw()
+```
+
+* "Deceit" and "hatred" are similar to each other since they are located near each other, which is pretty logical because these two objects have clearly negative associations for me. Object "sex" is close to "hatred" and "deceit", but it is also close to a group of positive objects such as beloved, love, mind, etc. 
+
+* As for people (real-self, mom, dad, beloved), they are pretty similar to each other. It is interesting that dad and beloved are more similar to each other than to mom or self, meanwhile ideal-self, real-self and mom are closer to each other than to dad or beloved. It may reflect gender-specific evaluation, for example, I gave mom and me 1 on the scale small-big and gave dad and beloved 3 on the same scale. "Ideal-self" and "real-self" are close to each other, which may reflect a healthy self-esteem. 
+
+* "Mind", "dad", "beloved", "self-control", "mom", "ideal-self", "real-self", "love" - all of them are very similar to each other, which is also logical, since all of them have very positive meaning for me.
+
+* "Reason" and "shyness" are pretty close to each other, but are far away from other objects. For me it was hard to evaluate these objects, so I guess I was prone to give neutral evaluations for these two objects. 
+
+* Object "Child" is relatively close to "reason" and "shyness" and is very far away from all other objects, which means that its evaluations are very different from the objects. For example, I estimated a child as weak, small and shallow just due to physiological features of child development. 
+
+
+
+
